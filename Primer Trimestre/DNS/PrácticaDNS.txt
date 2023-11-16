@@ -1,0 +1,3 @@
+sudo hostnamectl set-hostname serv1.dominio.dns
+sudo nano /etc/hosts
+192.168.1.100 serv1.dominio.dns serv1

@@ -1,0 +1,4 @@
+zone "red-david.com" {
+    type master;
+    file "/etc/bind/zones/db.red-david.com";
+};
