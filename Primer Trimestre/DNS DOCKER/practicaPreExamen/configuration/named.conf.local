@@ -1,0 +1,4 @@
+zone "dns-david.com" {
+    type master;
+    file "/etc/bind/zones/db.dns-david.com";
+};

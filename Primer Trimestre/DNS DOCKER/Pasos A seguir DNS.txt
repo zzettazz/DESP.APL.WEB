@@ -4,7 +4,7 @@ https://mpolinowski.github.io/docs/DevOps/Provisioning/2022-01-25--installing-bi
 
 MI PRACTICA
 
-docker network create --subnet=192.168.21.0/24 red-david
+docker network create --subnet=192.168.221.0/24 red-dns-david
 
 /opt/bind9/configuration/named.conf.options
 
@@ -22,15 +22,15 @@ options {
 
 /opt/bind9/configuration/named.conf.local
 
-zone "red-david.com" {
+zone "dns-david.com" {
     type master;
-    file "/etc/bind/zones/db.red-david.com";
+    file "/etc/bind/zones/db.dns-david.com";
 };
 
-/opt/bind9/configuration/db.red-david.com
+/opt/bind9/configuration/db.dns-david.com
 
 $TTL    1d ; default expiration time (in seconds) of all RRs without their own TTL value
-@       IN      SOA     ns1.red-david.com. root.red-david.com. (
+@       IN      SOA     master.dns-david.com. root.dns-david.com. (
                   3      ; Serial
                   1d     ; Refresh
                   1h     ; Retry
@@ -38,13 +38,13 @@ $TTL    1d ; default expiration time (in seconds) of all RRs without their own T
                   1h )   ; Negative Cache TTL
 
 ; name servers - NS records
-     IN      NS      ns1.red-david.com.
+     IN      NS      master.dns-david.com.
 
 ; name servers - A records
-ns1.red-david.com.             IN      A      192.168.21.10
+master.dns-david.com.             IN      A      192.168.221.10
 
-servidor1.red-david.com.        IN      A      192.168.21.20
-servidor2.red-david.com.        IN      A      192.168.21.30
+servidor1.dns-david.com.        IN      A      192.168.221.20
+servidor2.dns-david.com.        IN      A      192.168.221.30
 
 
 /opt/bind9/Dockerfile
@@ -62,7 +62,7 @@ RUN apt update \
 # Copy configuration files
 COPY configuration/named.conf.options /etc/bind/
 COPY configuration/named.conf.local /etc/bind/
-COPY configuration/db.red-david.com /etc/bind/zones/
+COPY configuration/db.dns-david.com /etc/bind/zones/
 
 # Expose Ports
 EXPOSE 53/tcp
@@ -72,19 +72,19 @@ EXPOSE 953/tcp
 # Start the Name Service
 CMD ["/usr/sbin/named", "-g", "-c", "/etc/bind/named.conf", "-u", "bind"]
 
-docker build -t ddns-master .
+docker build -t practica-dns .
 
-docker run -d --rm --name=ddns-master --net=red-david --ip=192.168.21.10 ddns-master
+docker run -d --rm --name=dns-master --net=red-dns-david --ip=192.168.221.10 practica-dns
 
-docker exec -ti ddns-master /bin/bash
+docker exec -ti dns-master /bin/bash
 
 named-checkconf
 
-named-checkzone red-david.com /etc/bind/zones/db.red-david.com
+named-checkzone dns-david.com /etc/bind/zones/db.dns-david.com
 
-docker run -d --rm --name=servidor1 --net=red-david --ip=192.168.21.20 --dns=192.168.21.10 nginx:1.21.6-alpine /bin/ash -c "while :; do sleep 10; done"
+docker run -d --rm --name=dns-servidor1 --net=red-dns-david --ip=192.168.221.20 --dns=192.168.221.10 nginx:1.21.6-alpine /bin/ash -c "while :; do sleep 10; done"
 
-docker run -d --rm --name=servidor2 --net=red-david --ip=192.168.21.30 --dns=192.168.21.10 nginx:1.21.6-alpine /bin/ash -c "while :; do sleep 10; done"
+docker run -d --rm --name=dns-servidor2 --net=red-dns-david --ip=192.168.221.30 --dns=192.168.221.10 nginx:1.21.6-alpine /bin/ash -c "while :; do sleep 10; done"
 
-DESDE SERVIDOR 1: nslookup servidor2.red-david.com
-DESDE SERVIDOR 2: nslookup servidor2.red-david.com
+DESDE SERVIDOR 1: nslookup servidor2.dns-david.com
+DESDE SERVIDOR 2: nslookup servidor1.dns-david.com
